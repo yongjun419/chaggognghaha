@@ -1,0 +1,54 @@
+1. 아두이노 코드
+void setup() {
+  Serial.begin(9600);
+}
+
+double th(int v) {
+  double t;
+  t = log(((10240000/v) - 10000));
+  t = 1 /(0.001129148 + (0.000234125*t) + (0.0000000876741*t*t*t));
+  t = t - 273.15; // 화씨를 섭씨로 바꾸어줌
+  return t;
+}
+void loop() {
+  int a = analogRead(A0);
+  Serial.println(th(a));
+  delay(1000);
+  int b = analogRead(A1);
+  Serial.println(b);
+  delay(1000);
+}
+
+프로세싱 코드
+
+import processing.serial.*;
+import processing.net.*;
+Serial p;
+Server s;
+Client c;
+void setup(){
+  p = new Serial(this, "COM3", 9600);
+  s = new Server(this, 12345);
+  size(200,200);
+  textSize(64);
+}
+String m="";
+void draw(){
+  if(p.available()>0){
+    m = p.readStringUntil('\n');
+    if(m!=null){
+      print(m);
+    }
+  }
+  c = s.available();
+  if(c!=null){
+    String w = c.readString();
+    println(w);
+    if (w.indexOf("GET")==0) { // 스마트폰의 GET이 0.5초 마다 요청을 할 경우 
+      c.write("HTTP/1.1 200 OK\r\n\r\n\r\n"); // POST 규격
+      c.write(m);
+    }
+    c.stop();
+    print(m);
+  }
+}
